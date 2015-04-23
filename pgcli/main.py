@@ -32,6 +32,7 @@ from .config import write_default_config, load_config
 from .key_bindings import pgcli_bindings
 from .encodingutils import utf8tounicode
 from .__init__ import __version__
+from blessings import Terminal
 
 
 try:
@@ -79,6 +80,9 @@ class PGCli(object):
         completer.extend_special_commands(CASE_SENSITIVE_COMMANDS.keys())
         completer.extend_special_commands(NON_CASE_SENSITIVE_COMMANDS.keys())
         self.completer = completer
+
+        # Initialize Terminal
+        self.term = Terminal()
 
     def initialize_logging(self):
 
@@ -261,7 +265,15 @@ class PGCli(object):
                     logger.error("traceback: %r", traceback.format_exc())
                     click.secho(str(e), err=True, fg='red')
                 else:
-                    click.echo_via_pager('\n'.join(output))
+                    lines = output[0].split('\n')
+                    output = '\n'.join(output)
+
+                    # Only use the pager if we have more rows than the
+                    # terminal can display at once
+                    if len(lines) > self.term.height:
+                        click.echo_via_pager(output)
+                    else:
+                        click.secho(output)
                     if pgspecial.TIMING_ENABLED:
                         print('Command Time:', duration)
                         print('Format Time:', total)
