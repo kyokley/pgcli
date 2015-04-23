@@ -270,7 +270,8 @@ class PGCli(object):
 
                     # Only use the pager if we have more rows than the
                     # terminal can display at once
-                    if len(lines) > self.term.height:
+                    max_width = max([len(x) for x in lines])
+                    if len(lines) > self.term.height or max_width > self.term.width:
                         click.echo_via_pager(output)
                     else:
                         click.secho(output)
